@@ -2,12 +2,20 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_gasolinera/core/utils/app_logger.dart';
+import 'package:my_gasolinera/core/config/api_config.dart';
 
 /// Cargador de variables de entorno para Web
 /// Lee desde web/assets/env.json en tiempo de ejecución
-class WebEnvLoader {
+class WebEnvLoader implements WebEnvLoaderForConfig {
   static final Map<String, String> _webEnv = {};
   static bool _isLoaded = false;
+  static final WebEnvLoader _instance = WebEnvLoader._internal();
+
+  WebEnvLoader._internal();
+
+  factory WebEnvLoader() {
+    return _instance;
+  }
 
   /// Carga las variables de entorno desde web/assets/env.json
   static Future<void> loadWebEnv() async {
@@ -36,12 +44,13 @@ class WebEnvLoader {
   }
 
   /// Obtiene una variable de entorno Web
-  static String? get(String key) {
+  @override
+  String? get(String key) {
     return _webEnv[key];
   }
 
   /// Obtiene una variable de entorno Web con valor por defecto
-  static String getOrDefault(String key, String defaultValue) {
+  String getOrDefault(String key, String defaultValue) {
     return _webEnv[key] ?? defaultValue;
   }
 }
