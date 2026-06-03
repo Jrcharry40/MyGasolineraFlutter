@@ -59,17 +59,25 @@ Future<void> main() async {
 Future<void> _initApp() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Cargar variables de entorno
-  await dotenv.load(fileName: ".env");
-
   final isAPK = !kIsWeb;
 
+  // Cargar variables de entorno SOLO en plataformas nativas
+  if (isAPK) {
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (e) {
+      AppLogger.warning('No se pudo cargar .env: $e', tag: 'Main');
+    }
+  }
+
   // Mostrar modo de plataforma
-  AppLogger.info('═══════════════════════════════════════════════════════════',
+  AppLogger.info('═══════════════════════════════════════════════════════════'
+      ,
       tag: 'Main');
   AppLogger.info('MODO PLATAFORMA: ${isAPK ? "APK/Nativo" : "WEB"}',
       tag: 'Main');
-  AppLogger.info('═══════════════════════════════════════════════════════════',
+  AppLogger.info('═══════════════════════════════════════════════════════════'
+      ,
       tag: 'Main');
 
   // Inicializar configuración dinámica del backend
