@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:my_gasolinera/core/config/web_env_loader.dart';
 
 Future<Logger> createLogger() async {
-  final isProduction = dotenv.env['FLUTTER_ENV'] == 'production';
+  // En Web, usar WebEnvLoader; si no está inicializado, usar false por defecto
+  final isProduction = WebEnvLoader().get('FLUTTER_ENV') == 'production' ? true : false;
 
   return Logger(
     filter: ProductionFilter(),
