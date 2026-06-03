@@ -23,7 +23,7 @@ dependencies:
   http: ^1.6.0
   intl: ^0.20.2
   shared_preferences: ^2.5.4
-  package_info_plus: ^9.0.0
+  package_info_plus: ^10.0.0
   logger: ^2.6.0 #Logging
   flutter_svg: ^2.2.4 #Para mostrar iconos SVG
 
@@ -38,8 +38,8 @@ dependencies:
   excel: ^4.0.6
   pdf: ^3.11.3
   printing: ^5.14.2
-  file_picker: ^10.3.8
-  share_plus: ^12.0.1
+  file_picker: ^9.0.0
+  share_plus: ^13.0.0
   universal_html: ^2.3.0
   cached_network_image: ^3.4.1
   web: ^1.0.0
@@ -82,7 +82,6 @@ flutter:
     - lib/assets/logo.png
     - assets/images/iconoFinal.png
     - assets/images/iconoFinal.svg
-    - assets/images/iconoFavFinal.png
     - assets/images/iconoValencia.png
     - assets/images/logos/
     - assets/data/
