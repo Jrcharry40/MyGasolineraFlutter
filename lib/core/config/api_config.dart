@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:my_gasolinera/core/utils/app_logger.dart';
 
+/// Cargador de variables Web (solo si está en Web)
+WebEnvLoaderForConfig? _webEnvLoader;
+
 ///
 /// Este archivo contiene la URL base del servidor backend.
 /// Cambia solo la URL aquí cuando uses cloudflared o cambies de servidor.
@@ -31,18 +34,43 @@ class ApiConfig {
     // Si se ha establecido una URL dinámica (ej. al inicio), usarla
     if (_dynamicUrl != null) return _dynamicUrl!;
 
-    final switchBackend = int.tryParse(dotenv.env['SWITCH_BACKEND'] ?? '0') ?? 0;
+    String? switchBackendStr;
+    String? apiUrlNgrok;
+    String? apiUrlEmulador;
+    String? apiUrlLocal;
+
+    if (kIsWeb) {
+      // En Web, leer de WebEnvLoader
+      switchBackendStr = _webEnvLoader?.get('SWITCH_BACKEND') ?? '0';
+      apiUrlNgrok =
+          _webEnvLoader?.get('API_URL_NGROK') ?? _ngrokUrl;
+      apiUrlEmulador =
+          _webEnvLoader?.get('API_URL_EMULADOR') ?? _androidEmulatorUrl;
+      apiUrlLocal =
+          _webEnvLoader?.get('API_URL_LOCAL') ?? _localUrl;
+    } else {
+      // En nativo, leer de dotenv
+      switchBackendStr = dotenv.env['SWITCH_BACKEND'] ?? '0';
+      apiUrlNgrok =
+          dotenv.env['API_URL_NGROK'] ?? _ngrokUrl;
+      apiUrlEmulador =
+          dotenv.env['API_URL_EMULADOR'] ?? _androidEmulatorUrl;
+      apiUrlLocal =
+          dotenv.env['API_URL_LOCAL'] ?? _localUrl;
+    }
+
+    final switchBackend = int.tryParse(switchBackendStr ?? '0') ?? 0;
 
     if (switchBackend == 1) {
-      return dotenv.env['API_URL_NGROK'] ?? _ngrokUrl;
+      return apiUrlNgrok;
     }
-    
+
     // Si es localhost (0) comprobamos si se ejecuta en Android o Desktop/Web
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return dotenv.env['API_URL_EMULADOR'] ?? _androidEmulatorUrl;
+      return apiUrlEmulador;
     }
-    
-    return dotenv.env['API_URL_LOCAL'] ?? _localUrl;
+
+    return apiUrlLocal;
   }
 
   /// Actualiza la URL base dinámicamente
@@ -103,7 +131,12 @@ class ApiConfig {
   static String get accesibilidadUrl => getUrl('/accesibilidad');
 
   /// Google Maps API key loaded from dotenv
-  static String get mapsApiKey => dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
+  static String get mapsApiKey {
+    if (kIsWeb) {
+      return _webEnvLoader?.get('GOOGLE_MAPS_API_KEY') ?? '';
+    }
+    return dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
+  }
 
   /// Headers base para todas las peticiones
   ///
@@ -113,4 +146,14 @@ class ApiConfig {
         'Accept': 'application/json',
         'ngrok-skip-browser-warning': 'true',
       };
+}
+
+/// Interfaz para inyectar WebEnvLoader en ApiConfig
+abstract class WebEnvLoaderForConfig {
+  String? get(String key);
+}
+
+/// Establece el cargador de variables Web
+void setWebEnvLoader(WebEnvLoaderForConfig loader) {
+  _webEnvLoader = loader;
 }
