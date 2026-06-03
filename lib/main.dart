@@ -103,8 +103,12 @@ Future<void> _initApp() async {
   // 1. Inicializar base de datos local (Isar solo en nativo, no en web)
   isarService = IsarService();
   if (!kIsWeb) {
-    await isarService.db; // Esperar a que abra la DB (solo en APK/nativo)
-    AppLogger.info('Base de datos local Isar inicializada', tag: 'Main');
+    try {
+      await isarService.db; // Esperar a que abra la DB (solo en APK/nativo)
+      AppLogger.info('Base de datos local Isar inicializada', tag: 'Main');
+    } catch (e) {
+      AppLogger.error('Error al inicializar Isar', error: e, tag: 'Main');
+    }
   } else {
     AppLogger.info('Web: sin base de datos local Isar', tag: 'Main');
   }
@@ -113,14 +117,19 @@ Future<void> _initApp() async {
   gasolineraCacheService = GasolinerasCacheService(isarService);
   syncManager = SyncManager(isarService: isarService);
   mapController = MapController(cacheService: gasolineraCacheService);
-  await mapController.precargarFavoritos();
+  
+  if (!kIsWeb) {
+    await mapController.precargarFavoritos();
+  }
 
-  // 3. Inicializar servicio de background refresh
-  backgroundRefreshService = BackgroundRefreshService(syncManager);
-  backgroundRefreshService.start();
+  // 3. Inicializar servicio de background refresh (solo en nativo)
+  if (!kIsWeb) {
+    backgroundRefreshService = BackgroundRefreshService(syncManager);
+    backgroundRefreshService.start();
 
-  // 4. Lanzar sincronización en background en el arranque (si está logueado)
-  syncManager.startBackgroundSync();
+    // 4. Lanzar sincronización en background en el arranque (si está logueado)
+    syncManager.startBackgroundSync();
+  }
 
   // Cargar TEMA
   await ThemeManager().loadInitialTheme();
