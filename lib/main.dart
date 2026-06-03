@@ -41,24 +41,33 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
 Future<void> main() async {
-  // Capturar crashes de zona async y mostrar pantalla de error
-  runZonedGuarded(() async {
+  // ✅ IMPORTANTE: Inicializar bindings FUERA de zonas
+  // Esto evita "Zone mismatch" en Web
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final isAPK = !kIsWeb;
+
+  // En plataformas nativas, usar runZonedGuarded para capturar crashes
+  if (isAPK) {
+    runZonedGuarded(() async {
+      await _initApp();
+    }, (error, stack) async {
+      final details = FlutterErrorDetails(
+        exception: error,
+        stack: stack,
+        library: 'Zona Dart',
+      );
+      final logPath =
+          await CrashHandler.saveCrashLog(error.toString(), stack.toString());
+      runApp(CrashHandler.buildCrashScreen(details, logPath: logPath));
+    });
+  } else {
+    // En Web, ejecutar sin zonas para evitar problemas
     await _initApp();
-  }, (error, stack) async {
-    final details = FlutterErrorDetails(
-      exception: error,
-      stack: stack,
-      library: 'Zona Dart',
-    );
-    final logPath =
-        await CrashHandler.saveCrashLog(error.toString(), stack.toString());
-    runApp(CrashHandler.buildCrashScreen(details, logPath: logPath));
-  });
+  }
 }
 
 Future<void> _initApp() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
   final isAPK = !kIsWeb;
 
   // Cargar variables de entorno SOLO en plataformas nativas
@@ -71,13 +80,13 @@ Future<void> _initApp() async {
   }
 
   // Mostrar modo de plataforma
-  AppLogger.info('═══════════════════════════════════════════════════════════'
-      ,
+  AppLogger.info(
+      '═══════════════════════════════════════════════════════════',
       tag: 'Main');
   AppLogger.info('MODO PLATAFORMA: ${isAPK ? "APK/Nativo" : "WEB"}',
       tag: 'Main');
-  AppLogger.info('═══════════════════════════════════════════════════════════'
-      ,
+  AppLogger.info(
+      '═══════════════════════════════════════════════════════════',
       tag: 'Main');
 
   // Inicializar configuración dinámica del backend
