@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:my_gasolinera/Implementaciones/auth/presentacion/pages/inicio.dart';
 import 'package:my_gasolinera/Implementaciones/home/presentacion/pages/layouthome.dart';
 import 'package:my_gasolinera/core/config/config_service.dart';
+import 'package:my_gasolinera/core/config/api_config.dart';
+import 'package:my_gasolinera/core/config/web_env_loader.dart';
 import 'package:my_gasolinera/core/utils/background_refresh_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_gasolinera/core/theme/Modos/Temas/theme_manager.dart';
@@ -46,6 +48,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final isAPK = !kIsWeb;
+
+  // En Web, cargar variables de entorno desde web/assets/env.json
+  if (kIsWeb) {
+    await WebEnvLoader.loadWebEnv();
+    setWebEnvLoader(WebEnvLoader());
+  }
 
   // En plataformas nativas, usar runZonedGuarded para capturar crashes
   if (isAPK) {
